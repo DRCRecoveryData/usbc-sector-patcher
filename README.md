@@ -4,6 +4,8 @@ This script was inspired by the work of Nguyen Vu Ha CEO of DRC Recovery, who or
 
 # Fixing File System Corruption Caused by USBC Sectors using Python
 
+![2023-02-20_201557](https://user-images.githubusercontent.com/85211068/220119775-e914c793-6818-4151-b22a-0f468950c7ed.png)
+
 This Python script is designed to help fix file system corruption caused by USBC sectors in disk images. USBC sectors are USB/SCSI command blocks that should not end up on the disk, and can cause file system corruption by introducing sector shift. This script will help patch the USBC sectors and recover lost data.
 
 ## Prerequisites
