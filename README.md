@@ -1,6 +1,6 @@
 ## Acknowledgements
 
-This script was inspired by the work of Nguyen Vu Ha and DRC Recovery, who originally developed a similar patching method to recover data from disk images that contain USBC sectors. Their work was an invaluable resource in the development of this script.
+This script was inspired by the work of Nguyen Vu Ha CEO of DRC Recovery, who originally developed a similar patching method to recover data from disk images that contain USBC sectors. Their work was an invaluable resource in the development of this script.
 
 # Fixing File System Corruption Caused by USBC Sectors using Python
 
