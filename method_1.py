@@ -14,6 +14,10 @@
 import os
 import struct
 
+print("")
+print("Be careful! Make a copy of the disk image first!")
+print("This program will modify the original file, if a USBC sector is found.")
+print("Current version of this program needs to be run once per USBC occurrence")
 img_path = input("Enter path to disk image file: ")
 
 # create "Patched" directory if it doesn't exist
@@ -27,7 +31,10 @@ with open(img_path, 'r+b') as f:
         usbc_offset = f.read().find(b'USBC')
         if usbc_offset == -1:
             # USBC sector not found, exit loop
+            print("USBC sector not found, exiting");
             break
+        else:
+            print("USBC found at offset: ",usbc_offset)
 
         # decode the USBC sector and determine the number of sectors it was intended to write
         f.seek(usbc_offset)
@@ -39,7 +46,7 @@ with open(img_path, 'r+b') as f:
         f.write(b'\x00' * 512)
 
         # shift all sectors in the block up by one LBA
-        for i in range(2, cmd_len+1):
+        for i in range(1, cmd_len+1):
             sector_offset = usbc_offset + i*512
             f.seek(sector_offset)
             sector_data = bytearray(f.read(512))
@@ -50,6 +57,7 @@ with open(img_path, 'r+b') as f:
         end_offset = usbc_offset + cmd_len * 512
         f.seek(end_offset)
         f.write(b'\x00' * 512)
+        break
 
     # save the patched disk image to the "Patched" directory
     f.seek(0)
