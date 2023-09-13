@@ -16,8 +16,8 @@ import struct
 
 print("")
 print("Be careful! Make a copy of the disk image first!")
-print("This program will modify the original file, if a USBC sector is found.")
-print("Current version of this program needs to be run once per USBC occurrence")
+print("This program will modify the original file if a USBC sector is found.")
+
 img_path = input("Enter path to disk image file: ")
 
 # create "Patched" directory if it doesn't exist
@@ -25,39 +25,39 @@ if not os.path.exists('Patched'):
     os.mkdir('Patched')
 
 with open(img_path, 'r+b') as f:
-    # loop over all occurrences of the USBC sector in the file
     while True:
-        # find the next occurrence of the USBC sector
-        usbc_offset = f.read().find(b'USBC')
+        f.seek(0)  # reset the file pointer to the beginning
+        data = f.read()
+        usbc_offset = data.find(b'USBC')
+        
         if usbc_offset == -1:
             # USBC sector not found, exit loop
-            print("USBC sector not found, exiting");
+            print("No more USBC sectors found, exiting")
             break
         else:
-            print("USBC found at offset: ",usbc_offset)
+            print("USBC found at offset:", usbc_offset)
 
-        # decode the USBC sector and determine the number of sectors it was intended to write
-        f.seek(usbc_offset)
-        data = bytearray(f.read(512))
-        cmd_len = struct.unpack('>H', data[22:24])[0]
-
-        # delete the USBC sector
-        f.seek(usbc_offset)
-        f.write(b'\x00' * 512)
-
-        # shift all sectors in the block up by one LBA
-        for i in range(1, cmd_len+1):
-            sector_offset = usbc_offset + i*512
-            f.seek(sector_offset)
+            # decode the USBC sector and determine the number of sectors it was intended to write
+            f.seek(usbc_offset)
             sector_data = bytearray(f.read(512))
-            f.seek(sector_offset - 512)
-            f.write(sector_data)
+            cmd_len = struct.unpack('>H', sector_data[22:24])[0]
 
-        # insert a zero-filled sector at the end of the block
-        end_offset = usbc_offset + cmd_len * 512
-        f.seek(end_offset)
-        f.write(b'\x00' * 512)
-        break
+            # delete the USBC sector
+            f.seek(usbc_offset)
+            f.write(b'\x00' * 512)
+
+            # shift all sectors in the block up by one LBA
+            for i in range(1, cmd_len + 1):
+                sector_offset = usbc_offset + i * 512
+                f.seek(sector_offset)
+                data_to_shift = bytearray(f.read(512))
+                f.seek(sector_offset - 512)
+                f.write(data_to_shift)
+
+            # insert a zero-filled sector at the end of the block
+            end_offset = usbc_offset + cmd_len * 512
+            f.seek(end_offset)
+            f.write(b'\x00' * 512)
 
     # save the patched disk image to the "Patched" directory
     f.seek(0)
