@@ -14,7 +14,6 @@
 import os
 import struct
 
-print("")
 print("Be careful! Make a copy of the disk image first!")
 print("This program will modify the original file if a USBC sector is found.")
 
@@ -37,24 +36,22 @@ with open(img_path, 'r+b') as f:
         else:
             print("USBC found at offset:", usbc_offset)
 
-            # decode the USBC sector and determine the number of sectors it was intended to write
+            # decode the USBC sector to determine the number of sectors it was intended to write
             f.seek(usbc_offset)
             sector_data = bytearray(f.read(512))
             cmd_len = struct.unpack('>H', sector_data[22:24])[0]
 
-            # delete the USBC sector
-            f.seek(usbc_offset)
-            f.write(b'\x00' * 512)
-
             # shift all sectors in the block up by one LBA
-            for i in range(1, cmd_len + 1):
-                sector_offset = usbc_offset + i * 512
-                f.seek(sector_offset)
-                data_to_shift = bytearray(f.read(512))
-                f.seek(sector_offset - 512)
+            for i in range(cmd_len):
+                # read the sector after USBC
+                f.seek(usbc_offset + (i + 1) * 512)
+                data_to_shift = f.read(512)
+                
+                # overwrite the current sector with the data read
+                f.seek(usbc_offset + i * 512)
                 f.write(data_to_shift)
 
-            # insert a zero-filled sector at the end of the block
+            # Zero out the last sector
             end_offset = usbc_offset + cmd_len * 512
             f.seek(end_offset)
             f.write(b'\x00' * 512)
@@ -64,3 +61,4 @@ with open(img_path, 'r+b') as f:
     patched_img_path = os.path.join('Patched', os.path.basename(img_path))
     with open(patched_img_path, 'wb') as patched_f:
         patched_f.write(f.read())
+
